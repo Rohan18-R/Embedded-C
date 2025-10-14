@@ -1,5 +1,4 @@
 #include<lpc21xx.h>
-void delay(int);
 void delay(int ms)
 {
 T0PR=15000-1;
