@@ -10,19 +10,19 @@ int main()
   while(1)
   {
   cgram_write();
-  for(i=0,j=0;i,j<32;i+=2,j+=2)
+  for(i=0,j=0;(i<32&&j<32);i+=1,j+=1)
   {
    if(count%2==0)
    {                                                                                                                                                                                                                                                                                          
     LCD_CMD(b+i);
-	LCD_DATA(0);
+	  LCD_DATA(0);
     delay(500);
     LCD_CMD(0x01);
    }
    else
    {
-    LCD_CMD(b+i);
-	LCD_DATA(0);
+    LCD_CMD(a+i);
+	  LCD_DATA(0);
     delay(500);
     LCD_CMD(0x01);
    }
