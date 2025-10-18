@@ -6,28 +6,36 @@ unsigned char cgram_lut[]={0x0e,0x11,0x11,0x11,0x11,0x11,0x11,0x0e};
 unsigned char a=0x80,b=0xc0,count=0;
 int main()
 {
+  int i,j;
   LCD_INIT();
   while(1)
   {
   cgram_write();
-  for(i=0,j=0;(i<32&&j<32);i+=1,j+=1)
+  {
+  for(i=0,j=0;((i<32)&&(j<32));i+=1,j+=1)
   {
    if(count%2==0)
    {                                                                                                                                                                                                                                                                                          
     LCD_CMD(b+i);
-	  LCD_DATA(0);
+	LCD_DATA(0);
     delay(500);
     LCD_CMD(0x01);
+	if(b==0xd0)
+	b=0xc0;
    }
    else
    {
     LCD_CMD(a+i);
-	  LCD_DATA(0);
+	LCD_DATA(0);
     delay(500);
     LCD_CMD(0x01);
+	if(a==0x90)
+	a=0x81;
    }
     count++;
   } 
+}
+}
 }
 void cgram_write(void)
 {
