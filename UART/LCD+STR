@@ -1,1 +1,61 @@
+#include<lpc21xx.h>
+#include"LCD_INIT.h"
+#define LED1  1<<16
+#define LED2  1<<17
+unsigned char ch;
+void uart_config(void);
+unsigned char uart_rx(void);
+void uart_tx(unsigned char);
+int main()
+{
+  IODIR0=LCD_D|rs|E|LED1|LED2;
+  LCD_INIT();
+  uart_config();
+  IOSET0=LED1|LED2;
+  while(1)
+  {
+    ch=uart_rx();
+	uart_tx(ch);
+	{
+	if(ch=='1')
+	{
+	 IOSET0=LED2;
+	 IOCLR0=LED1;
+	 LCD_CMD(0x01);
+	 LCD_CMD(0x80);
+	 LCD_string("LED1 is on");
+	}
+	else if(ch=='2')
+	{
+	  IOSET0=LED1;
+	  IOCLR0=LED2;
+	  LCD_CMD(0x01);
+	  LCD_CMD(0x80);
+	  LCD_string("LED2 is on");
+	}
+   }
+	
+  }
+}
+void uart_config(void)
+{
+  PINSEL0=5<<16;
+  U1LCR=0x83;
+  U1DLL=97;
+  U1DLM=0;
+  U1LCR=0x03;
+}
+unsigned char uart_rx(void)
+{
+  while((U1LSR & 0x1)==0);
+  return U1RBR;
 
+}
+void uart_tx(unsigned char txbyte)
+{
+  while(((U1LSR>>5)&1)==0);
+  U1THR=txbyte;
+}
+	 
+
+  
