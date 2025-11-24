@@ -1,1 +1,57 @@
-
+#include<lpc21xx.h>
+#include"LCD_INIT.h"
+char ch;
+int i=0;
+unsigned char rxbyte[20];
+void uart_config(void);
+void uart_string(unsigned char*);
+void uart_tx(unsigned char);
+unsigned char uart_rx(void);
+int main()
+{
+  LCD_INIT();
+  uart_config();
+  while(1)
+  {
+    ch=uart_rx();
+	if(ch=='\r')
+	break;
+	else
+	{
+	  if(i<(sizeof(rxbyte)-1))
+	  {
+	    rxbyte[i++]=ch;
+	  }
+	}
+  }
+  rxbyte[i]='\0';
+  LCD_CMD(0x80);
+  LCD_string(rxbyte);
+  uart_string(rxbyte);
+  
+}
+void uart_config(void)
+{
+  PINSEL0=5<<16;
+  U1LCR=0x83;
+  U1DLL=97;
+  U1DLM=0;
+  U1LCR=0x03;
+}
+void uart_string(unsigned char*s)
+{
+   while(*s)
+   {
+     uart_tx(*s++);
+   }
+}
+void uart_tx(unsigned char tx )
+{
+  while(((U1LSR>>5)&1)==0);
+  U1THR=tx;
+}
+unsigned char uart_rx(void)
+{
+  while((U1LSR & 0x1)==0);
+  return U1RBR;
+}
