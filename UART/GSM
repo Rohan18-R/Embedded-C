@@ -1,0 +1,93 @@
+#include <lpc21xx.h>
+#include <string.h>
+
+#define LED (1<<6)
+
+/* ------------------ Delay Function ------------------ */
+void delay_ms(unsigned int ms)
+{
+    T0PR = 15000 - 1;      // Prescaler for 1ms @15MHz
+    T0TCR = 0x01;
+    while(T0TC < ms);
+    T0TCR = 0x03;
+    T0TCR = 0x00;
+}
+
+/* ------------------ UART0 Config ------------------ */
+void uart0_config(void)
+{
+    PINSEL0 |= 0x00000005; // P0.0=TXD0, P0.1=RXD0
+    U0LCR = 0x83;          // 8-bit, DLAB=1
+    U0DLL = 97;            // 9600 baud @15MHz
+    U0DLM = 0;
+    U0LCR = 0x03;          // DLAB=0
+}
+
+/* ------------------ UART TX ------------------ */
+void uart0_txd(unsigned char ch)
+{
+    while(!(U0LSR & (1<<5)));
+    U0THR = ch;
+}
+
+/* ------------------ UART RX ------------------ */
+unsigned char uart0_rx(void)
+{
+    while(!(U0LSR & 0x01));
+    return U0RBR;
+}
+
+/* ------------------ UART String ------------------ */
+void uart0_str(char *s)
+{
+    while(*s)
+        uart0_txd(*s++);
+}
+
+/* ------------------ MAIN ------------------ */
+int main()
+{
+    char buf[100];
+    int i = 0;
+
+    IODIR0 |= LED;     // LED as output
+    IOSET0 = LED;      // LED OFF initially
+
+    uart0_config();
+    delay_ms(1000);
+
+    /* GSM Initialization */
+    uart0_str("AT\r");
+    delay_ms(1000);
+
+    uart0_str("AT+CMGF=1\r");   // Text mode
+    delay_ms(1000);
+
+    uart0_str("AT+CNMI=2,2,0,0,0\r");  // Direct SMS to UART
+    delay_ms(1000);
+
+    while(1)
+    {
+        buf[i++] = uart0_rx();
+        buf[i] = '\0';
+
+        if(strstr(buf, "on"))
+        {
+            IOCLR0 = LED;  // LED ON
+            i = 0;
+            memset(buf, 0, sizeof(buf));
+        }
+        else if(strstr(buf, "off"))
+        {
+            IOSET0 = LED;  // LED OFF
+            i = 0;
+            memset(buf, 0, sizeof(buf));
+        }
+
+        if(i >= 99)
+        {
+            i = 0;
+            memset(buf, 0, sizeof(buf));
+        }
+    }
+}
